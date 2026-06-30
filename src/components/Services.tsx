@@ -1,6 +1,13 @@
-import { Code, Smartphone, Share2, Video, Image, Camera, Lightbulb } from 'lucide-react'
+import { Code, Smartphone, Share2, Video, Image, Camera, Lightbulb, Megaphone, TrendingUp, Instagram } from 'lucide-react'
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
+import { staggerChildren, checkReducedMotion } from '../utils/animationConfig'
 
 const Services = () => {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const reducedMotion = checkReducedMotion()
+
   const services = [
     {
       icon: Code,
@@ -36,6 +43,21 @@ const Services = () => {
       icon: Lightbulb,
       name: 'Brand Strategy',
       description: 'Comprehensive branding solutions for business growth'
+    },
+    {
+      icon: Megaphone,
+      name: 'Digital Marketing',
+      description: 'Holistic social media strategy, content planning, and audience growth'
+    },
+    {
+      icon: TrendingUp,
+      name: 'Google Ads',
+      description: 'PPC campaigns, keyword optimization, ROI-driven ad management'
+    },
+    {
+      icon: Instagram,
+      name: 'Meta Ads',
+      description: 'Facebook & Instagram ad creation, targeting, and performance optimization'
     }
   ]
 
@@ -49,23 +71,41 @@ const Services = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          ref={ref}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={reducedMotion ? {} : staggerChildren.container}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {services.map((service, index) => {
             const Icon = service.icon
             return (
-              <div
+              <motion.div
                 key={index}
+                variants={reducedMotion ? {} : staggerChildren.item}
+                whileHover={!reducedMotion ? { 
+                  y: -3,
+                  boxShadow: "0 10px 40px -10px rgba(0,0,0,0.15)",
+                  backgroundColor: "#f1f5f9"
+                } : {}}
+                transition={!reducedMotion ? { duration: 0.3, ease: "easeInOut" } : {}}
                 className="bg-neutral-light p-8 rounded-xl hover:shadow-lg transition-shadow duration-200"
+                style={!reducedMotion ? { willChange: "transform, box-shadow" } : {}}
               >
-                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                <motion.div 
+                  whileHover={!reducedMotion ? { rotate: 10 } : {}}
+                  transition={!reducedMotion ? { duration: 0.5 } : {}}
+                  className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4"
+                >
                   <Icon className="w-6 h-6 text-accent" />
-                </div>
+                </motion.div>
                 <h3 className="text-xl font-semibold text-primary mb-2">{service.name}</h3>
                 <p className="text-gray-600">{service.description}</p>
-              </div>
+              </motion.div>
             )
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

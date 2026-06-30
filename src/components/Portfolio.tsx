@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useRef } from 'react'
+import { checkReducedMotion } from '../utils/animationConfig'
 
 const Portfolio = () => {
   const [selectedProject, setSelectedProject] = useState<number | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const reducedMotion = checkReducedMotion()
 
   const projects = [
     {
@@ -71,33 +77,56 @@ const Portfolio = () => {
         </div>
 
         {/* Main Projects */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {projects.map((project) => (
-            <div
+        <motion.div 
+          ref={ref}
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16"
+        >
+          {projects.map((project, index) => (
+            <motion.div
               key={project.id}
-              className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+              initial={reducedMotion ? {} : { opacity: 0, x: index % 2 === 0 ? -60 : 60 }}
+              animate={isInView ? (reducedMotion ? {} : { opacity: 1, x: 0 }) : {}}
+              transition={{ duration: 0.8, delay: index * 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg cursor-pointer"
               onClick={() => openProject(project.id)}
             >
               <div className="aspect-video bg-gray-200 relative overflow-hidden">
-                <img
+                <motion.img
                   src={project.thumbnail}
                   alt={project.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+                  transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                 />
-                <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                <motion.div 
+                  className="absolute inset-0 bg-black/50 flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                >
                   <span className="text-white font-semibold">View Project</span>
-                </div>
+                </motion.div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-primary mb-2">{project.name}</h3>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {project.services.map((service, index) => (
-                    <span
-                      key={index}
+                  {project.services.map((service, sIndex) => (
+                    <motion.span
+                      key={sIndex}
                       className="text-xs bg-accent/10 text-accent px-3 py-1 rounded-full"
+                      animate={isInView && !reducedMotion ? {
+                        scale: [1, 1.08, 1],
+                      } : {}}
+                      transition={{
+                        duration: 2.5,
+                        delay: index * 0.2 + 0.5,
+                        repeat: Infinity,
+                        repeatDelay: 1
+                      }}
                     >
                       {service}
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
                 <p className="text-gray-600 text-sm mb-4">{project.description}</p>
@@ -111,9 +140,9 @@ const Portfolio = () => {
                   Visit Website <ExternalLink size={16} />
                 </a>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Additional Services */}
         <div className="bg-white rounded-xl p-8 shadow-md">
@@ -130,65 +159,80 @@ const Portfolio = () => {
       </div>
 
       {/* Modal */}
-      {selectedProject && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-          <button
-            onClick={closeProject}
-            className="absolute top-4 right-4 text-white hover:text-accent transition-colors"
+      <AnimatePresence>
+        {selectedProject && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           >
-            <X size={32} />
-          </button>
+            <button
+              onClick={closeProject}
+              className="absolute top-4 right-4 text-white hover:text-accent transition-colors z-10"
+            >
+              <X size={32} />
+            </button>
 
-          <div className="max-w-5xl w-full">
-            <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-6">
-              <img
-                src={projects.find(p => p.id === selectedProject)?.images[currentImageIndex]}
-                alt="Project screenshot"
-                className="w-full h-full object-contain"
-              />
-              <button
-                onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors"
-              >
-                <ChevronLeft size={32} />
-              </button>
-              <button
-                onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors"
-              >
-                <ChevronRight size={32} />
-              </button>
-            </div>
-
-            <div className="text-white">
-              <h3 className="text-2xl font-bold mb-2">
-                {projects.find(p => p.id === selectedProject)?.name}
-              </h3>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {projects.find(p => p.id === selectedProject)?.services.map((service, index) => (
-                  <span
-                    key={index}
-                    className="text-sm bg-accent/20 text-accent px-3 py-1 rounded-full"
-                  >
-                    {service}
-                  </span>
-                ))}
+            <div className="max-w-5xl w-full">
+              <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-6">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={currentImageIndex}
+                    src={projects.find(p => p.id === selectedProject)?.images[currentImageIndex]}
+                    alt="Project screenshot"
+                    className="w-full h-full object-contain absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </AnimatePresence>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors z-10"
+                >
+                  <ChevronLeft size={32} />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors z-10"
+                >
+                  <ChevronRight size={32} />
+                </button>
               </div>
-              <p className="text-gray-300 mb-4">
-                {projects.find(p => p.id === selectedProject)?.description}
-              </p>
-              <a
-                href={projects.find(p => p.id === selectedProject)?.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-              >
-                Visit Website <ExternalLink size={18} />
-              </a>
+
+              <div className="text-white">
+                <h3 className="text-2xl font-bold mb-2">
+                  {projects.find(p => p.id === selectedProject)?.name}
+                </h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {projects.find(p => p.id === selectedProject)?.services.map((service, index) => (
+                    <span
+                      key={index}
+                      className="text-sm bg-accent/20 text-accent px-3 py-1 rounded-full"
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-4">
+                  {projects.find(p => p.id === selectedProject)?.description}
+                </p>
+                <a
+                  href={projects.find(p => p.id === selectedProject)?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Visit Website <ExternalLink size={18} />
+                </a>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

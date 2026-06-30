@@ -1,5 +1,7 @@
 import { Menu, X } from 'lucide-react'
 import Logo from './Logo'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { checkReducedMotion } from '../utils/animationConfig'
 
 interface NavigationProps {
   mobileMenuOpen: boolean
@@ -7,6 +9,12 @@ interface NavigationProps {
 }
 
 const Navigation = ({ mobileMenuOpen, setMobileMenuOpen }: NavigationProps) => {
+  const { scrollY } = useScroll()
+  const reducedMotion = checkReducedMotion()
+  
+  const opacity = useTransform(scrollY, [0, 100, 200], reducedMotion ? [1, 1, 1] : [0, 0, 1])
+  const y = useTransform(scrollY, [0, 100, 200], reducedMotion ? [0, 0, 0] : [-20, -20, 0])
+
   const navItems = [
     { name: 'Home', href: '#hero' },
     { name: 'Services', href: '#services' },
@@ -26,7 +34,7 @@ const Navigation = ({ mobileMenuOpen, setMobileMenuOpen }: NavigationProps) => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-8">
+          <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <a
                 key={item.name}
@@ -36,6 +44,20 @@ const Navigation = ({ mobileMenuOpen, setMobileMenuOpen }: NavigationProps) => {
                 {item.name}
               </a>
             ))}
+            <motion.a
+              href="#contact"
+              style={{ opacity, y }}
+              initial={{ opacity: 0, y: -20 }}
+              whileHover={!reducedMotion ? { 
+                scale: 1.05,
+                backgroundColor: "#0891b2"
+              } : {}}
+              whileTap={!reducedMotion ? { scale: 0.98 } : {}}
+              transition={{ duration: 0.3 }}
+              className="bg-accent text-white px-6 py-2 rounded-lg font-medium hover:bg-accent/90 transition-colors"
+            >
+              Get Started
+            </motion.a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -61,6 +83,14 @@ const Navigation = ({ mobileMenuOpen, setMobileMenuOpen }: NavigationProps) => {
                 {item.name}
               </a>
             ))}
+            <motion.a
+              href="#contact"
+              onClick={() => setMobileMenuOpen(false)}
+              whileTap={!reducedMotion ? { scale: 0.98 } : {}}
+              className="block mt-4 text-center bg-accent text-white px-6 py-3 rounded-lg font-medium"
+            >
+              Get Started
+            </motion.a>
           </div>
         )}
       </div>
